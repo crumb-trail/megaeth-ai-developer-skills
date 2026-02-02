@@ -181,10 +181,11 @@ These require VIP endpoints for heavy usage:
 
 ### Best Practices
 
-1. **Use Multicall for eth_call batching** — Amortizes per-RPC overhead (v2.0.14+)
-2. **Don't batch slow with fast** — `eth_getLogs` blocks entire batch response
-3. **Use cursors** — `eth_getLogsWithCursor` instead of huge `eth_getLogs`
-4. **Background historical queries** — Never block UX waiting for logs
+1. **Warm up connections** — Call `eth_chainId` on app init to pre-establish HTTP connection (avoids DNS/TCP/TLS overhead on first real request)
+2. **Use Multicall for eth_call batching** — Amortizes per-RPC overhead (v2.0.14+)
+3. **Don't batch slow with fast** — `eth_getLogs` blocks entire batch response
+4. **Use cursors** — `eth_getLogsWithCursor` instead of huge `eth_getLogs`
+5. **Background historical queries** — Never block UX waiting for logs
 
 ## eth_getLogs Limits
 

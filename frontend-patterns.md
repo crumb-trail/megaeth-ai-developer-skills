@@ -93,6 +93,26 @@ export function useMiniBlocks() {
 }
 ```
 
+## Connection Warmup
+
+First HTTP request to an RPC endpoint incurs connection overhead (DNS + TCP + TLS handshake). For latency-sensitive apps, warm up the connection on startup:
+
+```typescript
+// On app init or wallet connect — before user needs to transact
+async function warmupRpcConnection(client: PublicClient) {
+  await client.getChainId(); // Cheap call to establish connection
+}
+
+// Now first real transaction won't have cold-start latency
+```
+
+**Why it matters:** MegaETH has <10ms block times. A cold connection can add 50-200ms of overhead on the first request. Warming up ensures the connection pool is ready when users transact.
+
+**Best practice:** Call `eth_chainId` or `eth_blockNumber` on:
+- App initialization
+- Wallet connection
+- Network switch
+
 ## Transaction Submission
 
 ### Optimized Flow
