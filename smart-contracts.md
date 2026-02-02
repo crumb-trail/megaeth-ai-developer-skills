@@ -1,0 +1,204 @@
+# Smart Contract Patterns (MegaEVM)
+
+## MegaEVM vs Standard EVM
+
+MegaEVM is fully compatible with Ethereum contracts but has different:
+- **Gas costs** (especially SSTORE)
+- **Block metadata limits** (volatile data access)
+- **Contract size limits** (512 KB)
+
+## Contract Limits
+
+| Resource | Limit |
+|----------|-------|
+| Contract code | 512 KB |
+| Calldata | 128 KB |
+| eth_call/estimateGas | 10M gas (public), higher on VIP |
+
+## Volatile Data Access Control
+
+After accessing block metadata, transaction is limited to 20M additional compute gas.
+
+**Affected opcodes:**
+- `TIMESTAMP` / `block.timestamp`
+- `NUMBER` / `block.number`
+- `BLOCKHASH` / `blockhash(n)`
+
+```solidity
+// ❌ Problematic pattern
+function process() external {
+    uint256 ts = block.timestamp;  // Triggers limit
+    // Complex computation here will hit 20M gas ceiling
+    for (uint i = 0; i < 10000; i++) {
+        // Heavy work...
+    }
+}
+
+// ✅ Better: access metadata late
+function process() external {
+    // Do heavy computation first
+    for (uint i = 0; i < 10000; i++) {
+        // Heavy work...
+    }
+    // Access metadata at the end
+    emit Processed(block.timestamp);
+}
+```
+
+**Spec:** https://github.com/megaeth-labs/mega-evm/blob/main/specs/MiniRex.md#28-volatile-data-access-control
+
+## High-Precision Timestamps
+
+For microsecond precision, use the oracle instead of `block.timestamp`:
+
+```solidity
+interface ITimestampOracle {
+    /// @notice Returns timestamp in microseconds
+    function timestamp() external view returns (uint256);
+}
+
+contract MyContract {
+    ITimestampOracle constant ORACLE = 
+        ITimestampOracle(0x6342000000000000000000000000000000000002);
+    
+    function getTime() external view returns (uint256) {
+        return ORACLE.timestamp(); // Microseconds, not seconds
+    }
+}
+```
+
+## Storage Patterns
+
+### Avoid Dynamic Mappings
+
+```solidity
+// ❌ Expensive: each new key = new storage slot = 2M+ gas
+mapping(address => uint256) public balances;
+
+// ✅ Better: fixed-size or use RedBlackTreeLib
+uint256[100] public fixedBalances;
+```
+
+### Solady RedBlackTreeLib
+
+```solidity
+import {RedBlackTreeLib} from "solady/src/utils/RedBlackTreeLib.sol";
+
+contract OptimizedStorage {
+    using RedBlackTreeLib for RedBlackTreeLib.Tree;
+    RedBlackTreeLib.Tree private _tree;
+    
+    // Tree manages contiguous storage slots
+    // Insert/remove reuses slots instead of allocating new ones
+    
+    function insert(uint256 key, uint256 value) external {
+        _tree.insert(key);
+        // Store value in separate packed array
+    }
+}
+```
+
+## Gas Estimation
+
+Always use remote estimation:
+
+```solidity
+// foundry.toml
+[profile.default]
+# Don't rely on local simulation
+```
+
+```bash
+# Deploy with explicit gas, skip simulation
+forge script Deploy.s.sol \
+    --rpc-url https://mainnet.megaeth.com/rpc \
+    --gas-limit 5000000 \
+    --skip-simulation \
+    --broadcast
+```
+
+## Events and Logs
+
+LOG opcodes have quadratic cost above 4KB data:
+
+```solidity
+// ❌ Expensive: large event data
+event LargeData(bytes data); // If data > 4KB, quadratic cost
+
+// ✅ Better: emit hash, store off-chain
+event DataStored(bytes32 indexed hash);
+```
+
+## SELFDESTRUCT
+
+EIP-6780 style SELFDESTRUCT is being implemented. Check current status:
+- Same-tx destruction works
+- Cross-tx destruction behavior may vary
+
+## Deployment Patterns
+
+### Factory Contracts
+
+```solidity
+contract Factory {
+    function deploy(bytes32 salt, bytes memory bytecode) 
+        external 
+        returns (address) 
+    {
+        address addr;
+        assembly {
+            addr := create2(0, add(bytecode, 32), mload(bytecode), salt)
+        }
+        require(addr != address(0), "Deploy failed");
+        return addr;
+    }
+}
+```
+
+### Proxy Patterns
+
+Standard proxy patterns (EIP-1967, UUPS, Transparent) work normally. Consider:
+- Storage slot allocation costs on first write
+- Upgrade authorization patterns
+
+## Testing Contracts
+
+```solidity
+// Use Foundry with remote RPC
+contract MyTest is Test {
+    function setUp() public {
+        // Fork MegaETH testnet for realistic gas costs
+        vm.createSelectFork("https://carrot.megaeth.com/rpc");
+    }
+    
+    function testGasCost() public {
+        uint256 gasBefore = gasleft();
+        // Your operation
+        uint256 gasUsed = gasBefore - gasleft();
+        console.log("Gas used:", gasUsed);
+    }
+}
+```
+
+## OP Stack Compatibility
+
+MegaETH uses OP Stack. Standard bridge contracts and predeploys are available:
+
+| Contract | Address |
+|----------|---------|
+| WETH9 | `0x4200000000000000000000000000000000000006` |
+| Multicall3 | `0xcA11bde05977b3631167028862bE2a173976CA11` |
+| L2CrossDomainMessenger | `0x4200000000000000000000000000000000000007` |
+
+See OP Stack docs for full predeploy list.
+
+## Common Issues
+
+### "Intrinsic gas too low"
+Local simulation uses wrong opcode costs. Use `--skip-simulation` or remote estimation.
+
+### "Out of gas" after block.timestamp
+Hitting volatile data access limit. Restructure to access metadata late.
+
+### Transaction stuck
+Check nonce with `eth_getTransactionCount` using `pending` tag.
