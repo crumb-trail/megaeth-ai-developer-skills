@@ -165,6 +165,124 @@ Public endpoint supports `eth_call` on blocks from past ~15 days. For older data
 - Run your own archive node
 - Use indexers (Envio HyperSync recommended)
 
+## Latency Optimization
+
+MegaETH's real-time capabilities shine when you optimize for low latency. Here's what matters:
+
+### Benchmarks (West Coast US → Public RPC)
+
+| Method | HTTP | WebSocket |
+|--------|------|-----------|
+| eth_chainId | 40ms | **7ms** |
+| eth_getBalance | 140ms | ~50ms |
+| eth_sendRawTransactionSync | 200-450ms | **150-300ms** |
+
+WebSocket is **5-6x faster** for simple calls due to persistent connection.
+
+### 1. Use WebSocket Over HTTP
+
+```typescript
+// ❌ Slow: HTTP per request (TCP + TLS handshake each time)
+const result = await fetch(RPC_URL, { method: 'POST', ... });
+
+// ✅ Fast: Persistent WebSocket connection
+const ws = new WebSocket('wss://mainnet.megaeth.com/ws');
+ws.send(JSON.stringify({ method: 'eth_sendRawTransactionSync', ... }));
+```
+
+### 2. Pre-Sign Transactions
+
+Don't sign in the hot path. Prepare transactions ahead of time:
+
+```typescript
+// Pre-sign with sequential nonces
+const nonce = await publicClient.getTransactionCount({ address });
+
+const signedTxs = await Promise.all([
+  wallet.signTransaction({ ...baseTx, nonce: nonce }),
+  wallet.signTransaction({ ...baseTx, nonce: nonce + 1 }),
+  wallet.signTransaction({ ...baseTx, nonce: nonce + 2 }),
+]);
+
+// Later: fire instantly when needed
+const receipt = await rpc('eth_sendRawTransactionSync', [signedTxs[0]]);
+```
+
+### 3. Nonce Pipelining
+
+Don't wait for confirmations between transactions:
+
+```typescript
+// ❌ Slow: Wait for each confirmation
+for (const tx of transactions) {
+  const receipt = await sendAndWait(tx);
+}
+
+// ✅ Fast: Pipeline with sequential nonces
+let nonce = await getNonce(address);
+const receipts = await Promise.all(
+  transactions.map((tx, i) => 
+    rpc('eth_sendRawTransactionSync', [
+      signTx({ ...tx, nonce: nonce + i })
+    ])
+  )
+);
+```
+
+### 4. HTTP Keep-Alive
+
+If using HTTP, ensure connection reuse:
+
+```typescript
+import https from 'https';
+
+const agent = new https.Agent({ 
+  keepAlive: true,
+  maxSockets: 10 
+});
+
+// Reuse for all requests
+fetch(RPC_URL, { agent, ... });
+```
+
+### 5. Geographic Proximity
+
+| Setup | Latency |
+|-------|---------|
+| Cross-continent | 150-300ms RTT |
+| Same region (cloud) | 20-50ms RTT |
+| Local node | **<5ms RTT** |
+
+For ultra-low latency:
+- Use Alchemy/QuickNode geo-distributed endpoints
+- Run your own node in the same datacenter as your app
+
+### 6. Batch RPC Calls
+
+```typescript
+// ❌ Slow: 3 sequential calls = 3x latency
+const a = await rpc('eth_call', [params1]);
+const b = await rpc('eth_call', [params2]);
+const c = await rpc('eth_call', [params3]);
+
+// ✅ Fast: Single batch = 1x latency
+const [a, b, c] = await fetch(RPC_URL, {
+  body: JSON.stringify([
+    { method: 'eth_call', params: [params1], id: 1 },
+    { method: 'eth_call', params: [params2], id: 2 },
+    { method: 'eth_call', params: [params3], id: 3 },
+  ])
+});
+```
+
+### Theoretical Minimum Latency
+
+With optimal setup (local node + WebSocket + pre-signed):
+- Sign: ~1ms (pre-computed)
+- Network to local node: ~1ms
+- MegaETH processing: ~10ms
+- **Total: ~12ms**
+
 ## Debugging Commands
 
 ```bash
