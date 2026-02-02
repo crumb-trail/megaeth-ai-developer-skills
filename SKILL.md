@@ -1,12 +1,15 @@
 ---
 name: megaeth-developer
-description: End-to-end MegaETH development playbook (Feb 2026). Prefer eth_sendRawTransactionSync (EIP-7966) for instant receipts. Use JSON-RPC batching over Multicall. Covers real-time mini-block subscriptions, storage-aware contract patterns (Solady RedBlackTreeLib for dynamic state), MegaEVM gas model differences, WebSocket keepalive requirements, and debugging with mega-evme. Use when building low-latency dApps, optimizing gas costs, configuring RPC interactions, or deploying contracts on MegaETH mainnet/testnet.
+description: End-to-end MegaETH development playbook (Feb 2026). Covers wallet operations, token swaps (Kyber Network), eth_sendRawTransactionSync (EIP-7966) for instant receipts, JSON-RPC batching, real-time mini-block subscriptions, storage-aware contract patterns (Solady RedBlackTreeLib), MegaEVM gas model, WebSocket keepalive, bridging from Ethereum, and debugging with mega-evme. Use when building on MegaETH, managing wallets, sending transactions, or deploying contracts.
 ---
 
 # MegaETH Development Skill
 
 ## What this Skill is for
 Use this Skill when the user asks for:
+- Wallet setup and management on MegaETH
+- Sending transactions, checking balances, token operations
+- Token swaps via Kyber Network aggregator
 - MegaETH dApp frontend (React / Next.js with real-time updates)
 - RPC configuration and transaction flow optimization
 - Smart contract development with MegaEVM considerations
@@ -14,6 +17,7 @@ Use this Skill when the user asks for:
 - Gas estimation and fee configuration
 - Testing and debugging MegaETH transactions
 - WebSocket subscriptions and mini-block streaming
+- Bridging ETH from Ethereum to MegaETH
 
 ## Chain Configuration
 
@@ -85,6 +89,7 @@ When implementing changes, provide:
 - RPC optimization notes if applicable
 
 ## Progressive disclosure (read when needed)
+- Wallet operations: [wallet-operations.md](wallet-operations.md)
 - Frontend patterns: [frontend-patterns.md](frontend-patterns.md)
 - RPC methods reference: [rpc-methods.md](rpc-methods.md)
 - Smart contract patterns: [smart-contracts.md](smart-contracts.md)

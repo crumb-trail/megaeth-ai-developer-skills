@@ -96,6 +96,18 @@ export const megaeth = defineChain({
 });
 ```
 
+## DEX Aggregator
+
+### Kyber Network
+MegaETH uses Kyber Network for token swaps:
+- **Aggregator API**: `https://aggregator-api.kyberswap.com/megaeth/api/v1`
+- **Docs**: https://docs.kyberswap.com/kyberswap-solutions/kyberswap-aggregator
+
+Features:
+- Best-route across multiple DEXs
+- MEV protection
+- Gas-optimized execution
+
 ## Bridges
 
 ### Canonical Bridge (OP Stack)

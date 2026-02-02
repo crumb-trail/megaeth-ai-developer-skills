@@ -38,6 +38,7 @@ clawdhub install megaeth-developer
 
 ```
 ├── SKILL.md                  # Main skill (stack decisions, operating procedure)
+├── wallet-operations.md      # Wallet setup, balances, transfers, swaps, bridging
 ├── frontend-patterns.md      # React/Next.js, WebSocket, real-time UX
 ├── rpc-methods.md            # RPC reference, rate limits, batching
 ├── smart-contracts.md        # MegaEVM patterns, volatile data, predeploys
@@ -45,7 +46,7 @@ clawdhub install megaeth-developer
 ├── gas-model.md              # Gas costs, estimation, base fee
 ├── testing.md                # mega-evme, Foundry, debugging
 ├── security.md               # Vulnerabilities and prevention
-└── resources.md              # Links, tools, explorers, bridges
+└── resources.md              # Links, tools, explorers, bridges, DEX
 ```
 
 ## Usage
@@ -62,6 +63,10 @@ Once installed, your AI agent will automatically use this skill when you ask abo
 ### Example Prompts
 
 ```
+"Set up a wallet for MegaETH"
+"Send 0.1 ETH on MegaETH"
+"Swap USDC for ETH on MegaETH"
+"Bridge ETH from Ethereum to MegaETH"
 "Set up a Next.js app with MegaETH wallet connection"
 "Deploy a contract to MegaETH with Foundry"
 "Why is my transaction using so much gas?"
