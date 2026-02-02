@@ -132,6 +132,40 @@ ws.on('close', () => clearInterval(keepalive));
 - `eth_subscribe` / `eth_unsubscribe`
 - `eth_chainId` (for keepalive)
 
+## Batching eth_call Requests (v2.0.14+)
+
+As of v2.0.14, **Multicall is the preferred approach** for batching `eth_call` requests.
+
+### Why Multicall?
+
+With v2.0.14, `eth_call` is 2-10x faster. The EVM execution time is now a small fraction of total CPU time — most overhead is per-RPC framework cost. Multicall amortizes this overhead across multiple calls.
+
+```typescript
+// ✅ Preferred: Multicall (v2.0.14+)
+import { multicall } from 'viem/actions';
+
+const results = await multicall(client, {
+  contracts: [
+    { address: token1, abi: erc20Abi, functionName: 'balanceOf', args: [user] },
+    { address: token2, abi: erc20Abi, functionName: 'balanceOf', args: [user] },
+    { address: token3, abi: erc20Abi, functionName: 'balanceOf', args: [user] },
+  ]
+});
+```
+
+### Historical Context
+
+Earlier MegaETH guidance recommended JSON-RPC batching over Multicall because:
+- Multicall made it difficult to cache `eth_call` results effectively
+- Certain dApps benefited significantly from this caching
+
+With v2.0.14's performance improvements, the caching mechanism is deprecated and Multicall is now preferred.
+
+### Still Avoid
+
+- **Mixing slow + fast methods** — Don't batch `eth_getLogs` with `eth_call`; logs are always slower
+- **Blocking UX on historical queries** — Keep `eth_getLogs` in background
+
 ## Rate Limiting
 
 Public endpoints have rate limits based on:
@@ -147,10 +181,10 @@ These require VIP endpoints for heavy usage:
 
 ### Best Practices
 
-1. **Don't batch slow with fast** — `eth_getLogs` blocks entire batch response
-2. **Use cursors** — `eth_getLogsWithCursor` instead of huge `eth_getLogs`
-3. **Background historical queries** — Never block UX waiting for logs
-4. **Cache aggressively** — `eth_getTransactionCount` hits CDN cache for same geo
+1. **Use Multicall for eth_call batching** — Amortizes per-RPC overhead (v2.0.14+)
+2. **Don't batch slow with fast** — `eth_getLogs` blocks entire batch response
+3. **Use cursors** — `eth_getLogsWithCursor` instead of huge `eth_getLogs`
+4. **Background historical queries** — Never block UX waiting for logs
 
 ## eth_getLogs Limits
 

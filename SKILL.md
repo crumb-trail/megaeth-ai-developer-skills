@@ -33,10 +33,12 @@ Use this Skill when the user asks for:
 - Eliminates polling for `eth_getTransactionReceipt`
 - Docs: https://docs.megaeth.com/realtime-api
 
-### 2. RPC: JSON-RPC batching over Multicall
-- Prefer `client.request([...])` batch calls
-- Multicall (`aggregate3`) harder to cache, weaker consistency
-- Never batch slow methods (`eth_getLogs`) with fast ones (`eth_call`)
+### 2. RPC: Multicall for eth_call batching (v2.0.14+)
+- Prefer Multicall (`aggregate3`) for batching multiple `eth_call` requests
+- As of v2.0.14, `eth_call` is 2-10x faster; Multicall amortizes per-RPC overhead
+- Still avoid mixing slow methods (`eth_getLogs`) with fast ones in same request
+
+**Note:** Earlier guidance recommended JSON-RPC batching over Multicall for caching benefits. With v2.0.14's performance improvements, Multicall is now preferred.
 
 ### 3. WebSocket: keepalive required
 - Send `eth_chainId` every 30 seconds

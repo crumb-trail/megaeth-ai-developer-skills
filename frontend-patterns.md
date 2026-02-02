@@ -168,25 +168,27 @@ const tx = await walletClient.sendTransaction({
 });
 ```
 
-## RPC Request Batching
+## RPC Request Batching (v2.0.14+)
+
+As of v2.0.14, **Multicall is preferred** for batching `eth_call` requests. The `eth_call` implementation is now 2-10x faster, and Multicall amortizes per-RPC overhead.
 
 ```typescript
-// ❌ Wrong: Multicall contract
-const results = await multicall({ contracts: [...] });
+// ✅ Preferred: Multicall (v2.0.14+)
+import { multicall } from 'viem/actions';
 
-// ✅ Right: JSON-RPC batch
-const results = await client.request([
-  { method: 'eth_call', params: [call1], id: 1 },
-  { method: 'eth_call', params: [call2], id: 2 },
-  { method: 'eth_call', params: [call3], id: 3 }
-]);
+const results = await multicall(client, {
+  contracts: [
+    { address: token1, abi: erc20Abi, functionName: 'balanceOf', args: [user] },
+    { address: token2, abi: erc20Abi, functionName: 'balanceOf', args: [user] },
+    { address: pool, abi: poolAbi, functionName: 'getReserves' },
+  ]
+});
 
-// ❌ Wrong: mixing slow with fast
-const results = await client.request([
-  { method: 'eth_call', params: [...], id: 1 },     // Fast
-  { method: 'eth_getLogs', params: [...], id: 2 }   // Slow - blocks entire batch
-]);
+// ❌ Still avoid: mixing slow with fast
+// Don't batch eth_getLogs with eth_call — logs are always slower
 ```
+
+**Note:** Earlier guidance recommended JSON-RPC batching over Multicall for caching benefits. With v2.0.14's performance improvements, Multicall is now the preferred approach.
 
 ## Historical Data
 
