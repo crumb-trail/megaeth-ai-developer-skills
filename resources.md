@@ -1,5 +1,31 @@
 # Resources
 
+## Attribution & Sources
+
+This skill combines multiple sources. Key technical claims are validated against primary sources:
+
+| Source | What it validates |
+|--------|-------------------|
+| [MegaEVM Spec](https://github.com/megaeth-labs/mega-evm) | Gas model, resource limits, intrinsic gas, SSTORE formula |
+| [Foundry Prompting Guide](https://getfoundry.sh/introduction/prompting/) | Testing patterns, project structure, deployment scripts |
+| [MegaETH Docs](https://docs.megaeth.com) | RPC methods, real-time API, chain configuration |
+
+**Contributors:**
+- Original patterns: [0xBreadguy/megaeth-ai-developer-skills](https://github.com/0xBreadguy/megaeth-ai-developer-skills)
+- Foundry integration: [clawdybotty/megaeth-foundry-developer](https://github.com/clawdybotty/megaeth-foundry-developer)
+- Privy integration: Extracted from [latency-test](https://github.com/0xBreadguy/latency-test)
+
+## Primary MegaEVM Specification
+
+The authoritative source for MegaETH's execution layer:
+
+| Document | URL |
+|----------|-----|
+| Dual Gas Model | [DUAL_GAS_MODEL.md](https://github.com/megaeth-labs/mega-evm/blob/main/docs/DUAL_GAS_MODEL.md) |
+| Block & TX Limits | [BLOCK_AND_TX_LIMITS.md](https://github.com/megaeth-labs/mega-evm/blob/main/docs/BLOCK_AND_TX_LIMITS.md) |
+| MiniRex Spec | [MiniRex.md](https://github.com/megaeth-labs/mega-evm/blob/main/specs/MiniRex.md) |
+| Rex Spec | [Rex.md](https://github.com/megaeth-labs/mega-evm/blob/main/specs/Rex.md) |
+
 ## Official Documentation
 
 - **MegaETH Docs**: https://docs.megaeth.com
@@ -68,6 +94,15 @@ https://github.com/megaeth-labs/mega-evm/blob/main/scripts/trace_opcode_gas.py
 **Testnet**: `https://carrot.megaeth.com/rpc`
 
 ## Standards
+
+### EIP-1153 (Transient Storage)
+Temporary storage that's cleared after each transaction — avoids storage gas costs:
+https://eips.ethereum.org/EIPS/eip-1153
+
+**Why use on MegaETH:**
+- `TSTORE`/`TLOAD` have no storage gas cost
+- Perfect for reentrancy locks, temporary state
+- Supported on MegaETH
 
 ### EIP-6909 (Minimal Multi-Token)
 Simplified alternative to ERC-1155 — no callbacks, minimal interface, granular approvals:

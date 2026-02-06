@@ -1,13 +1,37 @@
 # Gas Model
 
+> **Sources**: Gas model validated against [MegaEVM spec](https://github.com/megaeth-labs/mega-evm/blob/main/docs/DUAL_GAS_MODEL.md) and [BLOCK_AND_TX_LIMITS.md](https://github.com/megaeth-labs/mega-evm/blob/main/docs/BLOCK_AND_TX_LIMITS.md).
+
+## Multidimensional Gas Model
+
+MegaETH uses a **dual gas model** — compute gas and storage gas are separate dimensions:
+
+| Dimension | Description |
+|-----------|-------------|
+| **Compute gas** | Execution cost (opcodes, memory) |
+| **Storage gas** | Persistent state modification cost |
+
+Both are paid from your gas limit, but tracked separately for resource accounting.
+
 ## Base Parameters
 
 | Parameter | Value | Notes |
 |-----------|-------|-------|
 | Base fee | 0.001 gwei (10⁶ wei) | Fixed, no EIP-1559 adjustment |
 | Priority fee | 0 | Ignored unless congested |
-| Block gas limit | None | Decoupled from tx limit |
-| Max tx gas | 5+ ggas | Much higher than other chains |
+| Intrinsic gas | 60,000 | 21K compute + 39K storage (not 21K like Ethereum) |
+| Gas forwarding | 98/100 | More gas available in nested calls than Ethereum's 63/64 |
+
+## Per-Transaction Resource Limits (Rex)
+
+| Resource | Limit |
+|----------|-------|
+| Compute gas | 200M |
+| KV updates | 500K |
+| State growth slots | 1,000 |
+| Data size | 12.5 MB |
+| Contract code | 512 KB |
+| Calldata | 128 KB |
 
 ## Setting Gas Price
 
@@ -124,11 +148,52 @@ const tx = {
 };
 ```
 
+## SSTORE Costs (Storage Gas)
+
+The most important gas difference from standard EVM. SSTORE 0→nonzero costs:
+
+```
+Compute gas: 22,100
+Storage gas: 20,000 × (bucket_multiplier - 1)
+```
+
+| Bucket Multiplier | Storage Gas | Total Gas |
+|-------------------|-------------|-----------|
+| 1 | 0 | 22,100 |
+| 2 | 20,000 | 42,100 |
+| 10 | 180,000 | 202,100 |
+| 100 | 1,980,000 | 2,002,100 |
+
+**Key insight:** When multiplier = 1, storage gas is **zero**. This is why slot reuse patterns (RedBlackTreeLib, transient storage) are so important.
+
+### Transient Storage (EIP-1153)
+
+Use `TSTORE`/`TLOAD` for temporary data within a transaction — avoids storage gas entirely:
+
+```solidity
+// Transient storage - no storage gas cost
+assembly {
+    tstore(0, value)  // Store temporarily
+    let v := tload(0) // Load back
+}
+// Cleared after transaction
+```
+
+## Gas Forwarding Ratio
+
+MegaETH uses **98/100** gas forwarding (vs Ethereum's 63/64):
+
+```solidity
+// More gas available in nested calls
+// Each call depth loses only 2%, not ~1.5%
+// Budget accordingly for deep call chains
+```
+
 ## Gas Refunds
 
-Standard EVM refunds apply (SSTORE clear, SELFDESTRUCT), but:
+Standard EVM refunds apply (SSTORE clear), but:
 - Refund capped at 50% of gas used
-- Future: State rent refund mechanism planned
+- SELFDESTRUCT is disabled on MegaETH
 
 ## LOG Opcode Costs
 
