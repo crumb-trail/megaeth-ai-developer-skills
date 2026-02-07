@@ -1,23 +1,28 @@
 ---
 name: megaeth-developer
-description: End-to-end MegaETH development playbook (Feb 2026). Covers wallet operations, token swaps (Kyber Network), eth_sendRawTransactionSync (EIP-7966) for instant receipts, JSON-RPC batching, real-time mini-block subscriptions, storage-aware contract patterns (Solady RedBlackTreeLib), MegaEVM gas model, WebSocket keepalive, bridging from Ethereum, and debugging with mega-evme. Use when building on MegaETH, managing wallets, sending transactions, or deploying contracts.
+description: End-to-end MegaETH development playbook (Feb 2026). Covers Foundry project setup with MegaETH-specific config, wallet operations, token swaps (Kyber Network), eth_sendRawTransactionSync (EIP-7966) for instant receipts, JSON-RPC batching, real-time mini-block subscriptions, storage-aware contract patterns (Solady RedBlackTreeLib, transient storage), MegaEVM multidimensional gas model, WebSocket keepalive, bridging from Ethereum, Privy headless signing for ultra-low latency, and debugging with mega-evme. Use when building on MegaETH, using Foundry, managing wallets, sending transactions, deploying contracts, or integrating Privy embedded wallets.
 ---
 
 # MegaETH Development Skill
 
 ## What this Skill is for
 Use this Skill when the user asks for:
+- Foundry project setup targeting MegaETH
+- Writing and running tests (unit, fuzz, invariant) on MegaETH
+- Deploying and verifying contracts on MegaETH
 - Wallet setup and management on MegaETH
 - Sending transactions, checking balances, token operations
 - Token swaps via Kyber Network aggregator
 - MegaETH dApp frontend (React / Next.js with real-time updates)
 - RPC configuration and transaction flow optimization
 - Smart contract development with MegaEVM considerations
-- Storage optimization (avoiding expensive SSTORE costs)
+- Storage optimization (transient storage, Solady patterns)
 - Gas estimation and fee configuration
 - Testing and debugging MegaETH transactions
 - WebSocket subscriptions and mini-block streaming
 - Bridging ETH from Ethereum to MegaETH
+- Privy integration for headless/automated signing
+- Ultra-low latency transaction patterns
 
 ## Chain Configuration
 
@@ -91,12 +96,14 @@ When implementing changes, provide:
 - RPC optimization notes if applicable
 
 ## Progressive disclosure (read when needed)
+- Foundry setup & deploy: [foundry-config.md](foundry-config.md)
 - Wallet operations: [wallet-operations.md](wallet-operations.md)
 - Frontend patterns: [frontend-patterns.md](frontend-patterns.md)
+- Privy integration: [privy-integration.md](privy-integration.md)
 - RPC methods reference: [rpc-methods.md](rpc-methods.md)
 - Smart contract patterns: [smart-contracts.md](smart-contracts.md)
 - Storage optimization: [storage-optimization.md](storage-optimization.md)
 - Gas model: [gas-model.md](gas-model.md)
 - Testing & debugging: [testing.md](testing.md)
 - Security considerations: [security.md](security.md)
-- Reference links: [resources.md](resources.md)
+- Reference links & attribution: [resources.md](resources.md)
