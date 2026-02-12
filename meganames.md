@@ -8,13 +8,13 @@ MegaNames is the ENS-style naming service for MegaETH's `.mega` TLD with stable 
 
 | Contract | Address |
 |----------|---------|
-| MegaNames | `0x0dbB1582ea7eA2584bFDE68AbA5d46763A568491` |
+| MegaNames | `0x5B424C6CCba77b32b9625a6fd5A30D409d20d997` |
 | USDM | `0xFAfDdbb3FC7688494971a79cc65DCa3EF82079E7` |
 | Fee Recipient | `0x25925C0191E8195aFb9dFA35Cd04071FF11D2e38` |
 
 **Explorers:**
-- Blockscout: https://megaeth.blockscout.com/address/0x0dbB1582ea7eA2584bFDE68AbA5d46763A568491
-- Etherscan: https://mega.etherscan.io/address/0x0dbB1582ea7eA2584bFDE68AbA5d46763A568491
+- Blockscout: https://megaeth.blockscout.com/address/0x5B424C6CCba77b32b9625a6fd5A30D409d20d997
+- Etherscan: https://mega.etherscan.io/address/0x5B424C6CCba77b32b9625a6fd5A30D409d20d997
 
 **Frontend:** https://meganame.market
 
@@ -71,7 +71,7 @@ Names are ERC-721 NFTs. Registration requires USDM approval + register call.
 ```solidity
 // 1. Approve USDM
 IERC20(0xFAfDdbb3FC7688494971a79cc65DCa3EF82079E7).approve(
-    0x0dbB1582ea7eA2584bFDE68AbA5d46763A568491,
+    0x5B424C6CCba77b32b9625a6fd5A30D409d20d997,
     fee
 );
 
@@ -251,7 +251,7 @@ Invalid: `-name`, `name-`, `My.Name`, `name space`, `émoji`
 ```typescript
 import { useReadContract } from 'wagmi'
 
-const MEGA_NAMES = '0x0dbB1582ea7eA2584bFDE68AbA5d46763A568491'
+const MEGA_NAMES = '0x5B424C6CCba77b32b9625a6fd5A30D409d20d997'
 
 // Resolve name to address
 const { data: addr } = useReadContract({
